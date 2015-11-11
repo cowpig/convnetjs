@@ -357,22 +357,22 @@ function updateNetVis() {
 
   var top = pad+30+30+pad;
 
-  var rowH = (nnch - top - pad) / nodes.length;
-  for (var i=0;i<(nodes.length-1);i++) {
-    var layer = nodes[i];
+  // var rowH = (nnch - top - pad) / nodes.length;
+  // for (var i=0;i<(nodes.length-1);i++) {
+  //   var layer = nodes[i];
     
     
-    var inW = (nncw - 2.0 * pad) / layer.in_act.depth;
-    if (i>0 && i<nodes.length-1) {
-      var outW = (nncw - 2.0 * pad) / layer.out_act.depth;
-    }
-    for (var j=0;j<layer.out_act.depth;j++) {
-      var node = 
-      for (var k=0;k<nextlayer.out_act.depth;k++) {
+  //   var inW = (nncw - 2.0 * pad) / layer.in_act.depth;
+  //   if (i>0 && i<nodes.length-1) {
+  //     var outW = (nncw - 2.0 * pad) / layer.out_act.depth;
+  //   }
+  //   for (var j=0;j<layer.out_act.depth;j++) {
+  //     var node = 
+  //     for (var k=0;k<nextlayer.out_act.depth;k++) {
 
-      }
-    }
-  }
+  //     }
+  //   }
+  // }
 
 }
 

@@ -15,10 +15,7 @@ var FPS;
 
 function drawBubble(x, y, w, h, radius, _ctx)
 {
-  var ctx = ctx;
-  if (_ctx !== null && _ctx !== undefined) {
-    var ctx = _ctx;
-  }
+  var ctx = _ctx || ctx;
   var r = x + w;
   var b = y + h;
   ctx.beginPath();
@@ -40,10 +37,7 @@ function drawBubble(x, y, w, h, radius, _ctx)
 
 function drawRect(x, y, w, h, _ctx)
 {
-  var ctx = ctx;
-  if (_ctx !== null && _ctx !== undefined) {
-    var ctx = _ctx;
-  }
+  var ctx = _ctx || ctx;
   ctx.beginPath();
   ctx.rect(x,y,w,h);
   ctx.closePath();
@@ -53,10 +47,7 @@ function drawRect(x, y, w, h, _ctx)
 
 function drawCircle(x, y, r, _ctx)
 {
-  var ctx = ctx;
-  if (_ctx !== null && _ctx !== undefined) {
-    var ctx = _ctx;
-  }
+  var ctx = _ctx || ctx;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI*2, true); 
   ctx.closePath();
