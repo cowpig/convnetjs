@@ -66,6 +66,10 @@ function drawCircle(x, y, r, _ctx)
   _ctx.fill();
 }
 
+function distance(x1, y1, x2, y2) {
+  return Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+}
+
 //uniform distribution integer
 function randi(s, e) {
   return Math.floor(Math.random()*(e-s) + s);
@@ -91,23 +95,26 @@ function randn(mean, variance) {
   return X;
 }
 
-function eventClick(e) {
+function eventClickGen(callback, canvas) {
+  return function eventClick(e) {
+    //get position of cursor relative to top left of canvas
+    var x;
+    var y;
+    if (e.pageX || e.pageY) { 
+      x = e.pageX;
+      y = e.pageY;
+    } else { 
+      x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+      y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+    } 
+    x -= canvas.offsetLeft;
+    y -= canvas.offsetTop;
+
+    console.log("canvasxy: " + x + " " + y);
     
-  //get position of cursor relative to top left of canvas
-  var x;
-  var y;
-  if (e.pageX || e.pageY) { 
-    x = e.pageX;
-    y = e.pageY;
-  } else { 
-    x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
-    y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
-  } 
-  x -= canvas.offsetLeft;
-  y -= canvas.offsetTop;
-  
-  //call user-defined callback
-  mouseClick(x, y, e.shiftKey, e.ctrlKey);
+    //call user-defined callback
+    callback(x, y, e.shiftKey, e.ctrlKey);
+  }
 }
 
 //event codes can be found here:
@@ -129,7 +136,7 @@ function NPGinit(FPS){
   ctx = canvas.getContext('2d');
   WIDTH = canvas.width;
   HEIGHT = canvas.height;
-  canvas.addEventListener('click', eventClick, false);
+  canvas.addEventListener('click', eventClickGen(mouseClick, canvas), false);
   
   //canvas element cannot get focus by default. Requires to either set 
   //tabindex to 1 so that it's focusable, or we need to attach listeners

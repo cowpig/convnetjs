@@ -132,6 +132,8 @@ function update(){
     var time = end - start;
         
     // console.log('loss = ' + avloss + ', 100 cycles through data in ' + time + 'ms');
+
+    updateNetVis();
   }
 }
 
@@ -330,14 +332,15 @@ var pad = 40;
 var radi = 20;
 var nncanvas;
 var nnctx;
+var nodes = [];
 
-function updateNetVis() {
-
-  var nodes = []; 
+function resetNetVis()
+{
+  var nn_nodes = []; 
   var synaps = [];
   for (var i=1;i<net.layers.length;i++) {
     if (i%2 == 0) {
-      nodes.push(net.layers[i]);
+      nn_nodes.push(net.layers[i]);
     } else {
       synaps.push(net.layers[i]);
     }
@@ -356,68 +359,138 @@ function updateNetVis() {
 
 
   var totalH = pad+30+30+pad;
-  var rowH = (nnch - totalH - pad) / nodes.length;
-  var circles = [];
-  var lines = [];
+  var rowH = (nnch - totalH - pad) / nn_nodes.length;
   // add all the nodes
-  for(var i=0;i<nodes.length;i++){
-    var layer = nodes[i];
+  for(var i=0;i<nn_nodes.length;i++){
+    var layer = nn_nodes[i];
     var colW = (nncw - pad*2.0) / layer.out_depth;
     var ntop = totalH + rowH*i + rowH/2.0;
 
-    circles.push([])
+    nodes.push([]);
     
     for(var j=0;j<layer.out_depth;j++){
       var nleft = pad + colW*j + colW/2.0;
       // console.log(ntop, nleft);
-      circles[i].push({"x":nleft, "y":ntop, "s":false});
+      nodes[i].push({"x":nleft, "y":ntop, "s":false, "ins":[]});
     }
   }
 
   // add conns from input to first layer
   // var top = top + 30;
-  for(var i=0;i<circles[0].length;i++){
-    c = circles[0][i];
-    lines.push({'x1':left, 'y1':top+pad/2, 'x2':c['x'], 'y2':c['y']-radi, 's':false})
+  for(var i=0;i<nodes[0].length;i++){
+    c = nodes[0][i];
+    c.ins.push({'x1':left, 'y1':top+pad/2, 'x2':c['x'], 'y2':c['y']-radi, 's':false})
     var right = left + "INPUT".length * 20;
-    lines.push({'x1':right, 'y1':top+pad/2, 'x2':c['x'], 'y2':c['y']-radi, 's':false})
+    c.ins.push({'x1':right, 'y1':top+pad/2, 'x2':c['x'], 'y2':c['y']-radi, 's':false})
   }
   // add rest of conns
-  for(var i=0;i<circles.length-1;i++){
-    for(var j=0;j<circles[i].length;j++){
-      var c = circles[i][j];
-      for(var k=0;k<circles[i+1].length;k++){
-        var c2 = circles[i+1][k];
-        lines.push({'x1':c['x'], 'y1':c['y']+radi, 'x2':c2['x'], 'y2':c2['y']-radi, 's':false})
+  for(var i=0;i<nodes.length-1;i++){
+    for(var j=0;j<nodes[i].length;j++){
+      var c = nodes[i][j];
+      for(var k=0;k<nodes[i+1].length;k++){
+        var c2 = nodes[i+1][k];
+        c2.ins.push({'x1':c['x'], 'y1':c['y']+radi, 'x2':c2['x'], 'y2':c2['y']-radi, 's':false, 'out':c2})
       }
     }
   }
 
-  // draw lines and circles
-  for(var i=0;i<lines.length;i++){
-    var l = lines[i];
-    if (l.s){
-      nnctx.lineWidth = 3;
-      nnctx.fillStyle = "black";
-    } else {
-      nnctx.lineWidth = 2;
-      nnctx.fillStyle = "grey";
-    }
-    drawLine(l.x1, l.y1, l.x2, l.y2, nnctx);
-  }
-  for(var i=0;i<circles.length;i++){
-    for(var j=0;j<circles[i].length;j++){
-      var c = circles[i][j];
+  // updateNetVis();
+}
+
+
+function updateNetVis() {
+  var nncw = nncanvas.width;
+  var nnch = nncanvas.height;
+  nnctx.clearRect(0,0,nncw,nnch);
+
+  ///////////////////////////////////////
+  // draw the neural network's architecture
+  nnctx.font = "30px Arial";
+  nnctx.fillStyle = "black";
+  var left = (nncw - "INPUT".length*20 - pad*2) / 2 + ("INPUT".length*20 /2);
+  var top = pad+30
+  nnctx.fillText("INPUT",left,top);
+
+  // draw nodes
+  for(var i=0;i<nodes.length;i++){
+    for(var j=0;j<nodes[i].length;j++){
+      var c = nodes[i][j];
       if (c.s) {
-        nnctx.fillstyle = "black";
+        console.log("drawing a selection");
+        nnctx.fillStyle = "black";
+        nnctx.strokeStyle = "black";
       } else {
-        nnctx.fillstyle = "grey";
+        console.log("drawing a non-selection");
+        nnctx.fillStyle = "grey";
+        nnctx.strokeStyle = "grey";
       }
       drawCircle(c.x, c.y, radi, nnctx);
+
+      // draw each line that is an input to this node
+      for(var k=0;k<c.ins.length;k++){
+        var l = c.ins[k];
+
+        // draw an indicator of the weight
+        var ix = 1 + (i*2); // converts nodes layer to convnetjs net object layer
+        console.log(ix);
+        var w = net['layers'][ix]["filters"][j]["w"];
+        var mm = cnnutil.maxmin(w);
+        console.log(w);
+        console.log(mm);
+        var norm = (w[k] - mm.minv) / mm.dv;
+        console.log("norm " + norm);
+        console.log("drawing a circle size " + 5 + " at: " + normx + " " + normy);
+
+        var normx = l.x1 + (l.x2 - l.x1)*norm;
+        var normy = l.y1 + (l.y2 - l.y1)*norm;
+        nnctx.lineWidth = 3;
+        drawLine(l.x1, l.y1, normx, normy, nnctx);
+        nnctx.lineWidth = 1;
+        drawLine(normx, normy, l.x2, l.y2, nnctx);
+        // drawCircle(normx, normy, 5, nnctx);
+      }
     }
   }
-
 }
+
+function clickNetVis(x, y, shiftPressed, ctrlPressed){
+  var clicked=false;
+  // console.log("clicked on " + x + " " + y);
+
+  for(var i=0;i<nodes.length;i++){
+    for(var j=0;j<nodes[i].length;j++){
+      c = nodes[i][j]
+      console.log(distance(c.x, c.y, x, y));
+      if (distance(c.x, c.y, x, y) < radi) {
+        var clicked_circle = nodes[i][j];
+        clicked=true;
+        console.log(clicked_circle);
+        break;
+      }
+    }
+    if (clicked) break;
+  }
+
+  if (clicked) {
+    var top_layer = i;
+
+    for(var i=0;i<nodes.length;i++){
+      for(var j=0;j<nodes[i].length;j++){
+        if (i < top_layer) {
+          nodes[i][j].s = true;
+        } else if (i >= top_layer) {
+          nodes[i][j].s = false;
+        }
+      }
+      // for(var k=0;k<nodes[i][j].ins.length;k++){
+      //   nodes[i][j].ins[k].s = nodes[i][j].s;
+      // }
+    }
+  clicked_circle.s = true; //I'm sure there's a more elegant way to do this but w/e
+  }
+  updateNetVis();
+}
+
 
 $(function() {
     // note, globals
@@ -427,12 +500,13 @@ $(function() {
     visHEIGHT = viscanvas.height;
 
     nncanvas =  document.getElementById("nncanvas");
-    nnctx = nncanvas.getContext("2d")
+    nnctx = nncanvas.getContext("2d");
+    nncanvas.addEventListener('click', eventClickGen(clickNetVis, nncanvas), false);
 
     circle_data();
     $("#layerdef").val(t);
     reload();
     NPGinit(20);
-    updateNetVis();
+    resetNetVis();
 });
 
