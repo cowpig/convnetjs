@@ -1,4 +1,4 @@
-
+var train = true;
 var data, labels, N;
 var ss = 50.0; // scale for drawing
 
@@ -111,26 +111,29 @@ function spiral_data() {
 }
  
 function update(){
-  // forward prop the data
+  if (train) {
+    // forward prop the data
 
-  var start = new Date().getTime();
+    var start = new Date().getTime();
 
-  var x = new convnetjs.Vol(1,1,2);
-  //x.w = data[ix];
-  var avloss = 0.0;
-  for(var iters=0;iters<20;iters++) {
-    for(var ix=0;ix<N;ix++) {
-      x.w = data[ix];
-      var stats = trainer.train(x, labels[ix]);
-      avloss += stats.loss;
+    var x = new convnetjs.Vol(1,1,2);
+    //x.w = data[ix];
+    var avloss = 0.0;
+    for(var iters=0;iters<20;iters++) {
+      for(var ix=0;ix<N;ix++) {
+        x.w = data[ix];
+        var stats = trainer.train(x, labels[ix]);
+        avloss += stats.loss;
+      }
     }
-  }
-  avloss /= N*iters;
+    avloss /= N*iters;
 
-  var end = new Date().getTime();
-  var time = end - start;
-      
-  //console.log('loss = ' + avloss + ', 100 cycles through data in ' + time + 'ms');
+    var end = new Date().getTime();
+    var time = end - start;
+        
+    // console.log('loss = ' + avloss + ', 100 cycles through data in ' + time + 'ms');
+  }
+  updateNetVis();
 }
 
 function cycle() {
@@ -145,6 +148,7 @@ function cycle() {
 var lix = 4; // layer id to track first 2 neurons of
 var d0 = 0; // first dimension to show visualized
 var d1 = 1; // second dimension to show visualized
+
 function draw(){
     
     ctx.clearRect(0,0,WIDTH,HEIGHT);
@@ -306,6 +310,72 @@ function keyDown(key){
 function keyUp(key) {
 }
 
+function toggleTrain() {
+  train = !train;
+  if (train) {
+    $("#toggletrain").attr("value", "pause training");
+  } else {
+    $("#toggletrain").attr("value", "resume training");
+  }
+}
+
+function stepTrain() {
+  train = true;
+  update();
+  train = false;
+  $("#toggletrain").attr("value", "resume training");
+}
+
+// globals for neural network structure visualization
+var pad = 20;
+var radi = 5;
+var nncanvas;
+var nnctx;
+
+function updateNetVis() {
+
+  var nodes = []; 
+  var synaps = [];
+  for (var i=1;i<net.layers.length;i++) {
+    if (i%2 == 0) {
+      nodes.push(net.layers[i]);
+    } else {
+      synaps.push(net.layers[i]);
+    }
+  }
+
+  var nncw = nncanvas.width;
+  var nnch = nncanvas.height;
+
+  // draw the neural network's architecture
+  nnctx.font = "30px Arial";
+  nnctx.fillStyle = "black";
+  var left = (nncw - "INPUT".length * 30 - pad*2) / 2; 
+  console.log(left);
+  nnctx.fillText("INPUT",left,pad+30);
+
+
+  var top = pad+30+30+pad;
+
+  var rowH = (nnch - top - pad) / nodes.length;
+  for (var i=0;i<(nodes.length-1);i++) {
+    var layer = nodes[i];
+    
+    
+    var inW = (nncw - 2.0 * pad) / layer.in_act.depth;
+    if (i>0 && i<nodes.length-1) {
+      var outW = (nncw - 2.0 * pad) / layer.out_act.depth;
+    }
+    for (var j=0;j<layer.out_act.depth;j++) {
+      var node = 
+      for (var k=0;k<nextlayer.out_act.depth;k++) {
+
+      }
+    }
+  }
+
+}
+
 $(function() {
     // note, globals
     viscanvas = document.getElementById('viscanvas');
@@ -313,9 +383,13 @@ $(function() {
     visWIDTH = viscanvas.width;
     visHEIGHT = viscanvas.height;
 
+    nncanvas =  document.getElementById("nncanvas");
+    nnctx = nncanvas.getContext("2d")
+
     circle_data();
     $("#layerdef").val(t);
     reload();
     NPGinit(20);
 
 });
+
