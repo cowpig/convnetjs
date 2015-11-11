@@ -133,7 +133,6 @@ function update(){
         
     // console.log('loss = ' + avloss + ', 100 cycles through data in ' + time + 'ms');
   }
-  updateNetVis();
 }
 
 function cycle() {
@@ -327,8 +326,8 @@ function stepTrain() {
 }
 
 // globals for neural network structure visualization
-var pad = 20;
-var radi = 5;
+var pad = 40;
+var radi = 20;
 var nncanvas;
 var nnctx;
 
@@ -347,30 +346,74 @@ function updateNetVis() {
   var nncw = nncanvas.width;
   var nnch = nncanvas.height;
 
+  ///////////////////////////////////////
   // draw the neural network's architecture
   nnctx.font = "30px Arial";
   nnctx.fillStyle = "black";
-  var left = (nncw - "INPUT".length * 30 - pad*2) / 2; 
-  console.log(left);
-  nnctx.fillText("INPUT",left,pad+30);
+  var left = (nncw - "INPUT".length*20 - pad*2) / 2 + ("INPUT".length*20 /2);
+  var top = pad+30
+  nnctx.fillText("INPUT",left,top);
 
 
-  var top = pad+30+30+pad;
-
-  var rowH = (nnch - top - pad) / nodes.length;
-  for (var i=0;i<(nodes.length-1);i++) {
+  var totalH = pad+30+30+pad;
+  var rowH = (nnch - totalH - pad) / nodes.length;
+  var circles = [];
+  var lines = [];
+  // add all the nodes
+  for(var i=0;i<nodes.length;i++){
     var layer = nodes[i];
-    
-    
-    var inW = (nncw - 2.0 * pad) / layer.in_act.depth;
-    if (i>0 && i<nodes.length-1) {
-      var outW = (nncw - 2.0 * pad) / layer.out_act.depth;
-    }
-    for (var j=0;j<layer.out_act.depth;j++) {
-      var node = 
-      for (var k=0;k<nextlayer.out_act.depth;k++) {
+    var colW = (nncw - pad*2.0) / layer.out_depth;
+    var ntop = totalH + rowH*i + rowH/2.0;
 
+    circles.push([])
+    
+    for(var j=0;j<layer.out_depth;j++){
+      var nleft = pad + colW*j + colW/2.0;
+      // console.log(ntop, nleft);
+      circles[i].push({"x":nleft, "y":ntop, "s":false});
+    }
+  }
+
+  // add conns from input to first layer
+  // var top = top + 30;
+  for(var i=0;i<circles[0].length;i++){
+    c = circles[0][i];
+    lines.push({'x1':left, 'y1':top+pad/2, 'x2':c['x'], 'y2':c['y']-radi, 's':false})
+    var right = left + "INPUT".length * 20;
+    lines.push({'x1':right, 'y1':top+pad/2, 'x2':c['x'], 'y2':c['y']-radi, 's':false})
+  }
+  // add rest of conns
+  for(var i=0;i<circles.length-1;i++){
+    for(var j=0;j<circles[i].length;j++){
+      var c = circles[i][j];
+      for(var k=0;k<circles[i+1].length;k++){
+        var c2 = circles[i+1][k];
+        lines.push({'x1':c['x'], 'y1':c['y']+radi, 'x2':c2['x'], 'y2':c2['y']-radi, 's':false})
       }
+    }
+  }
+
+  // draw lines and circles
+  for(var i=0;i<lines.length;i++){
+    var l = lines[i];
+    if (l.s){
+      nnctx.lineWidth = 3;
+      nnctx.fillStyle = "black";
+    } else {
+      nnctx.lineWidth = 2;
+      nnctx.fillStyle = "grey";
+    }
+    drawLine(l.x1, l.y1, l.x2, l.y2, nnctx);
+  }
+  for(var i=0;i<circles.length;i++){
+    for(var j=0;j<circles[i].length;j++){
+      var c = circles[i][j];
+      if (c.s) {
+        nnctx.fillstyle = "black";
+      } else {
+        nnctx.fillstyle = "grey";
+      }
+      drawCircle(c.x, c.y, radi, nnctx);
     }
   }
 
@@ -390,6 +433,6 @@ $(function() {
     $("#layerdef").val(t);
     reload();
     NPGinit(20);
-
+    updateNetVis();
 });
 

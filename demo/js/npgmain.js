@@ -15,46 +15,55 @@ var WIDTH;
 var HEIGHT; 
 var FPS;
 
+function drawLine(x1, y1, x2, y2, _ctx)
+{
+  _ctx = _ctx || ctx;
+  _ctx.beginPath();
+  _ctx.moveTo(x1, y1);
+  _ctx.lineTo(x2, y2);
+  _ctx.stroke();
+}
+
 function drawBubble(x, y, w, h, radius, _ctx)
 {
-  var ctx = _ctx || ctx;
+  _ctx = _ctx || ctx;
   var r = x + w;
   var b = y + h;
-  ctx.beginPath();
-  ctx.strokeStyle="black";
-  ctx.lineWidth="2";
-  ctx.moveTo(x+radius, y);
-  ctx.lineTo(x+radius/2, y-10);
-  ctx.lineTo(x+radius * 2, y);
-  ctx.lineTo(r-radius, y);
-  ctx.quadraticCurveTo(r, y, r, y+radius);
-  ctx.lineTo(r, y+h-radius);
-  ctx.quadraticCurveTo(r, b, r-radius, b);
-  ctx.lineTo(x+radius, b);
-  ctx.quadraticCurveTo(x, b, x, b-radius);
-  ctx.lineTo(x, y+radius);
-  ctx.quadraticCurveTo(x, y, x+radius, y);
-  ctx.stroke();
+  _ctx.beginPath();
+  _ctx.strokeStyle="black";
+  _ctx.lineWidth="2";
+  _ctx.moveTo(x+radius, y);
+  _ctx.lineTo(x+radius/2, y-10);
+  _ctx.lineTo(x+radius * 2, y);
+  _ctx.lineTo(r-radius, y);
+  _ctx.quadraticCurveTo(r, y, r, y+radius);
+  _ctx.lineTo(r, y+h-radius);
+  _ctx.quadraticCurveTo(r, b, r-radius, b);
+  _ctx.lineTo(x+radius, b);
+  _ctx.quadraticCurveTo(x, b, x, b-radius);
+  _ctx.lineTo(x, y+radius);
+  _ctx.quadraticCurveTo(x, y, x+radius, y);
+  _ctx.stroke();
 }
 
 function drawRect(x, y, w, h, _ctx)
 {
-  var ctx = _ctx || ctx;
-  ctx.beginPath();
-  ctx.rect(x,y,w,h);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  _ctx = _ctx || ctx;
+  _ctx.beginPath();
+  _ctx.rect(x,y,w,h);
+  _ctx.closePath();
+  _ctx.fill();
+  _ctx.stroke();
 }
 
 function drawCircle(x, y, r, _ctx)
 {
-  var ctx = _ctx || ctx;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI*2, true); 
-  ctx.closePath();
-  ctx.stroke();
-  ctx.fill();
+  _ctx = _ctx || ctx;
+  _ctx.beginPath();
+  _ctx.arc(x, y, r, 0, Math.PI*2, true); 
+  _ctx.closePath();
+  _ctx.stroke();
+  _ctx.fill();
 }
 
 //uniform distribution integer
