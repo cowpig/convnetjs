@@ -1,4 +1,16 @@
 # cowpig's fork
+
+The file in question is 
+```
+demo/classify2d.js
+```
+
+You might have to build to get it to work, with
+```
+$ cd compile
+$ ant -lib yuicompressor-2.4.8.jar -f build.xml
+```
+
 TODO:
  - REFACTOR (seriously a lot of what I've done is super gross and convoluted)
  - the representation of the network doesn't seem to generalize correctly to other configurations
