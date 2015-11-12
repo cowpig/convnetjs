@@ -1,3 +1,13 @@
+# cowpig's fork
+TODO:
+ - REFACTOR (seriously a lot of what I've done is super gross and convoluted)
+ - fix the layout so that it's easy to observe all the canvasses at once 
+ - it seems that the visualization and training are accessing different objects, so that the click-and-drag changes to the weights are overwritten by the next training step
+ - I'd love to see the gradient that's visible in the nodecanvas show up on top of the nodes instead (thus eliminating the need to click a node to look at what it's doing)
+ - adjusting the weights by clicking-and-dragging is finnicky & needs to be cleaned up
+ 	- clicking somewhere on the line and having the indicator jump to that point might feel nice
+ 	- the indicators are always at extremes on the first layer, since they're normalized with respect to minimum/maximum--I should come up with something better for this.
+- it would be cool to do the same thing for 3-dimensional input, perhaps using the sizes or colors of spheres floating in a 3d space to indicate activation
 
 # ConvNetJS
 
