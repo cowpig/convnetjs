@@ -114,7 +114,7 @@ function spiral_data() {
 }
  
 function update(){
-  console.log("update " + clicked);
+  // console.log("update");
   if (clicked === false){
     if (train) {
       // forward prop the data
@@ -157,7 +157,7 @@ var d0 = 0; // first dimension to show visualized
 var d1 = 1; // second dimension to show visualized
 
 function draw(){
-    console.log("draw " + clicked);
+    // console.log("draw");
     ctx.clearRect(0,0,WIDTH,HEIGHT);
 
     // node visualization
@@ -197,8 +197,8 @@ function draw(){
           gridy.push(yt);
 
           if (selected_node !== null){
-            console.log("selected_node: " + selected_node);
-            console.log(net.layers);
+            // console.log("selected_node: " + selected_node);
+            // console.log(net.layers);
 
             var activation = net.layers[selected_node[0]].out_act.w[selected_node[1]];
             nodectx.fillStyle = "hsl(0, 0%, " + (100-activation*100) + "%)"
@@ -441,7 +441,7 @@ function resetNetVis()
 
 
 function updateNetVis() {
-  console.log("updateNetVis " + clicked);
+  // console.log("updateNetVis");
   var nncw = nncanvas.width;
   var nnch = nncanvas.height;
   nnctx.clearRect(0,0,nncw,nnch);
@@ -516,7 +516,7 @@ function drawWeights() {
 //this global should always be false, unless clicking and dragging a weight indicator
 var clicked = false; 
 function nnMouseDown(x, y, shiftPressed, ctrlPressed) {
-  console.log("nnMouseDown" + clicked);
+  // console.log("nnMouseDown");
   
   train = false;
   $("#toggletrain").attr("value", "resume training");
@@ -529,7 +529,7 @@ function nnMouseDown(x, y, shiftPressed, ctrlPressed) {
 }
 
 function nnDrag(x, y, shiftPressed, ctrlPressed) {
-  console.log("nnDrag" + clicked);
+  // console.log("nnDrag");
   if (clicked !== false) {
     var ydiff = (y - clicked.l.y1) / (clicked.l.y2 - clicked.l.y1);
     var new_w = ydiff * clicked.max - clicked.min;
@@ -540,19 +540,19 @@ function nnDrag(x, y, shiftPressed, ctrlPressed) {
 }
 
 function nnLeave(x,y,shiftPressed,ctrlPressed) {
-  console.log("nnLeave" + clicked);
+  // console.log("nnLeave");
   clicked = false;
 }
 
 function nnMouseUp(x, y, shiftPressed, ctrlPressed){
   // console.log("clicked on " + x + " " + y);
-  console.log("nnMouseUp" + clicked);
+  // console.log("nnMouseUp");
   var clicked_a_node = false;
   if (clicked === false) {
     for(var i=0;i<nodes.length;i++){
       for(var j=0;j<nodes[i].length;j++){
         c = nodes[i][j]
-        console.log(distance(c.x, c.y, x, y));
+        // console.log(distance(c.x, c.y, x, y));
         if (distance(c.x, c.y, x, y) < radi) {
           var clicked_circle = nodes[i][j];
           selected_node = [2+2*i, j]

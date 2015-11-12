@@ -110,7 +110,7 @@ function eventClickGen(callback, canvas) {
     x -= canvas.offsetLeft;
     y -= canvas.offsetTop;
 
-    console.log("canvasxy: " + x + " " + y);
+    // console.log("canvasxy: " + x + " " + y);
     
     //call user-defined callback
     callback(x, y, e.shiftKey, e.ctrlKey);
