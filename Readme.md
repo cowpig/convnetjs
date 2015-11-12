@@ -1,6 +1,7 @@
 # cowpig's fork
 TODO:
  - REFACTOR (seriously a lot of what I've done is super gross and convoluted)
+ - the representation of the network doesn't seem to generalize correctly to other configurations
  - it seems that the visualization and training are accessing different objects, so that the click-and-drag changes to the weights are overwritten by the next training step
  - I'd love to see the gradient that's visible in the nodecanvas show up on top of the nodes instead (thus eliminating the need to click a node to look at what it's doing)
  - adjusting the weights by clicking-and-dragging is finnicky & needs to be cleaned up

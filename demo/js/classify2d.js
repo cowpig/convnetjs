@@ -565,7 +565,7 @@ function nnMouseUp(x, y, shiftPressed, ctrlPressed){
     }
   }
 
-  if (clicked !== false) {
+  if (clicked_a_node) {
     var top_layer = i;
 
     for(var i=0;i<nodes.length;i++){

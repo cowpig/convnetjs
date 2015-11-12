@@ -29,6 +29,12 @@ canvas {
   display: inline-block;
   vertical-align: top;
 }
+#layerdef {
+  display: none;
+}
+#buttontp {
+  display: none;
+}
 input[type="submit"]
 {
   margin: 3px;
@@ -41,10 +47,6 @@ input[type="submit"]
 <body>
 
 <div id="wrap">
-<h1><a href="http://cs.stanford.edu/people/karpathy/convnetjs">ConvnetJS</a> demo: toy 2d classification with 2-layer neural network</h1>
-
-<p>The simulation below shows a toy binary problem with a few data points of class 0 (red) and 1 (green). The network is set up as:</p>
-
 <textarea id="layerdef" style="width:100%; height:200px;">
 </textarea>
 <br>
