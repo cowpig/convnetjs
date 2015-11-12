@@ -129,6 +129,12 @@ function eventKeyDown(e) {
   keyDown(keycode);
 }
 
+function redGreenScale(value){
+    //value from 0 to 1
+    var hue=(value*120).toString(10);
+    return ["hsl(",hue,",100%,50%)"].join("");
+}
+
 function NPGinit(FPS){
   //takes frames per secont to run at
   

@@ -14,7 +14,7 @@ layer_defs.push({type:'softmax', num_classes:2});\n\
 net = new convnetjs.Net();\n\
 net.makeLayers(layer_defs);\n\
 \n\
-trainer = new convnetjs.SGDTrainer(net, {learning_rate:0.01, momentum:0.1, batch_size:10, l2_decay:0.001});\n\
+trainer = new convnetjs.SGDTrainer(net, {learning_rate:0.01, momentum:0.1, batch_size:10, l2_decay:0.1});\n\
 ";
 
 function reload() {
@@ -29,7 +29,10 @@ function reload() {
   $("#layer_ixes").html(t);
   $("#button"+lix).css('background-color', '#FFA');
   $("#cyclestatus").html('drawing neurons ' + d0 + ' and ' + d1 + ' of layer with index ' + lix + ' (' + net.layers[lix].layer_type + ')');
+
+  updateNetVis();
 }
+
 function updateLix(newlix) {
   $("#button"+lix).css('background-color', ''); // erase highlight
   lix = newlix;
@@ -111,29 +114,32 @@ function spiral_data() {
 }
  
 function update(){
-  if (train) {
-    // forward prop the data
+  console.log("update " + clicked);
+  if (clicked === false){
+    if (train) {
+      // forward prop the data
 
-    var start = new Date().getTime();
+      var start = new Date().getTime();
 
-    var x = new convnetjs.Vol(1,1,2);
-    //x.w = data[ix];
-    var avloss = 0.0;
-    for(var iters=0;iters<20;iters++) {
-      for(var ix=0;ix<N;ix++) {
-        x.w = data[ix];
-        var stats = trainer.train(x, labels[ix]);
-        avloss += stats.loss;
+      var x = new convnetjs.Vol(1,1,2);
+      //x.w = data[ix];
+      var avloss = 0.0;
+      for(var iters=0;iters<20;iters++) {
+        for(var ix=0;ix<N;ix++) {
+          x.w = data[ix];
+          var stats = trainer.train(x, labels[ix]);
+          avloss += stats.loss;
+        }
       }
+      avloss /= N*iters;
+
+      var end = new Date().getTime();
+      var time = end - start;
+          
+      // console.log('loss = ' + avloss + ', 100 cycles through data in ' + time + 'ms');
+
+      updateNetVis();
     }
-    avloss /= N*iters;
-
-    var end = new Date().getTime();
-    var time = end - start;
-        
-    // console.log('loss = ' + avloss + ', 100 cycles through data in ' + time + 'ms');
-
-    updateNetVis();
   }
 }
 
@@ -151,8 +157,13 @@ var d0 = 0; // first dimension to show visualized
 var d1 = 1; // second dimension to show visualized
 
 function draw(){
-    
+    console.log("draw " + clicked);
     ctx.clearRect(0,0,WIDTH,HEIGHT);
+
+    // node visualization
+    if (selected_node !== null){
+      nodectx.clearRect(0,0,WIDTH,HEIGHT);
+    }
     
     var netx = new convnetjs.Vol(1,1,2);
     // draw decisions in the grid
@@ -160,7 +171,10 @@ function draw(){
     var gridstep = 2;
     var gridx = [];
     var gridy = [];
-    var gridl = []; 
+    var gridl = [];
+
+    var gridnode = [];
+    
     for(var x=0.0, cx=0; x<=WIDTH; x+= density, cx++) {
       for(var y=0.0, cy=0; y<=HEIGHT; y+= density, cy++) {
         //var dec= svm.marginOne([(x-WIDTH/2)/ss, (y-HEIGHT/2)/ss]);
@@ -181,6 +195,17 @@ function draw(){
           var yt = net.layers[lix].out_act.w[d1]; // in screen coords
           gridx.push(xt);
           gridy.push(yt);
+
+          if (selected_node !== null){
+            console.log("selected_node: " + selected_node);
+            console.log(net.layers);
+
+            var activation = net.layers[selected_node[0]].out_act.w[selected_node[1]];
+            nodectx.fillStyle = "hsl(0, 0%, " + (100-activation*100) + "%)"
+            var scalor = (WIDTH / density);
+            nodectx.fillRect(x-density, y-density, density*2, density*2);
+          }
+
           gridl.push(a.w[0] > a.w[1]); // remember final label as well
         }
       }
@@ -195,6 +220,18 @@ function draw(){
     ctx.moveTo(WIDTH/2, 0);
     ctx.lineTo(WIDTH/2, HEIGHT);
     ctx.stroke();
+
+
+    // draw axes
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgb(50,50,50)';
+    ctx.lineWidth = 1;
+    ctx.moveTo(0, HEIGHT/2);
+    ctx.lineTo(WIDTH, HEIGHT/2);
+    ctx.moveTo(WIDTH/2, 0);
+    ctx.lineTo(WIDTH/2, HEIGHT);
+    ctx.stroke();
+
 
     // draw representation transformation axes for two neurons at some layer
     var mmx = cnnutil.maxmin(gridx);
@@ -333,9 +370,14 @@ var radi = 20;
 var nncanvas;
 var nnctx;
 var nodes = [];
+var wlocs = []; // objs on connection lines that represent weights
+var selected_node = null; // node that has been selected for visualization
 
 function resetNetVis()
 {
+  // important gotcha: the convnet object has two "layer" objects for the conventional
+  //  neural network layers--one for the linear transformation (wx + b), and one
+  //  that passes that result into an activation function (tanh / sigmoid / relu)
   var nn_nodes = []; 
   var synaps = [];
   for (var i=1;i<net.layers.length;i++) {
@@ -399,6 +441,7 @@ function resetNetVis()
 
 
 function updateNetVis() {
+  console.log("updateNetVis " + clicked);
   var nncw = nncanvas.width;
   var nnch = nncanvas.height;
   nnctx.clearRect(0,0,nncw,nnch);
@@ -410,68 +453,119 @@ function updateNetVis() {
   var left = (nncw - "INPUT".length*20 - pad*2) / 2 + ("INPUT".length*20 /2);
   var top = pad+30
   nnctx.fillText("INPUT",left,top);
+  wlocs = []; // we're going to recalc the weight locations
 
   // draw nodes
   for(var i=0;i<nodes.length;i++){
     for(var j=0;j<nodes[i].length;j++){
       var c = nodes[i][j];
       if (c.s) {
-        console.log("drawing a selection");
+        // console.log("drawing a selection");
         nnctx.fillStyle = "black";
         nnctx.strokeStyle = "black";
       } else {
-        console.log("drawing a non-selection");
+        // console.log("drawing a non-selection");
         nnctx.fillStyle = "grey";
         nnctx.strokeStyle = "grey";
       }
       drawCircle(c.x, c.y, radi, nnctx);
 
+      // get weights for this layer
+      var ix = 1 + (i*2); // converts nodes layer to convnetjs net "fully connected" layer
+      // console.log(ix);
+      var w = net['layers'][ix]["filters"][j]["w"];
+      var mm = cnnutil.maxmin(w);
+
       // draw each line that is an input to this node
+      
       for(var k=0;k<c.ins.length;k++){
         var l = c.ins[k];
-
-        // draw an indicator of the weight
-        var ix = 1 + (i*2); // converts nodes layer to convnetjs net object layer
-        console.log(ix);
-        var w = net['layers'][ix]["filters"][j]["w"];
-        var mm = cnnutil.maxmin(w);
-        console.log(w);
-        console.log(mm);
+        // console.log(w);
+        // console.log(mm);
         var norm = (w[k] - mm.minv) / mm.dv;
-        console.log("norm " + norm);
-        console.log("drawing a circle size " + 5 + " at: " + normx + " " + normy);
+        // console.log("norm " + norm);
+        // console.log("drawing a circle size " + 5 + " at: " + normx + " " + normy);
 
         var normx = l.x1 + (l.x2 - l.x1)*norm;
         var normy = l.y1 + (l.y2 - l.y1)*norm;
+
+        wlocs.push({'x': normx, 'y': normy, 'w': w[k], 'norm':norm, 'l':l, 
+                'ref':[ix,j,k], 'min':mm.minv, 'max':mm.maxv, 'd':mm.dv});
+
         nnctx.lineWidth = 3;
         drawLine(l.x1, l.y1, normx, normy, nnctx);
         nnctx.lineWidth = 1;
         drawLine(normx, normy, l.x2, l.y2, nnctx);
-        // drawCircle(normx, normy, 5, nnctx);
       }
+    }
+  }
+  drawWeights();
+}
+
+function drawWeights() {
+  var nncw = nncanvas.width;
+  var nnch = nncanvas.height;
+
+  for (var i=0; i<wlocs.length;i++){
+    var w = wlocs[i];
+    nnctx.fillStyle = redGreenScale(w.norm);
+    drawCircle(w.x, w.y, 5, nnctx);
+  }
+}
+
+//this global should always be false, unless clicking and dragging a weight indicator
+var clicked = false; 
+function nnMouseDown(x, y, shiftPressed, ctrlPressed) {
+  console.log("nnMouseDown" + clicked);
+  
+  train = false;
+  $("#toggletrain").attr("value", "resume training");
+
+  for (var i=0;i<wlocs.length;i++){
+    if (distance(x,y,wlocs[i].x,wlocs[i].y) < 5) {
+      clicked = wlocs[i];
     }
   }
 }
 
-function clickNetVis(x, y, shiftPressed, ctrlPressed){
-  var clicked=false;
-  // console.log("clicked on " + x + " " + y);
+function nnDrag(x, y, shiftPressed, ctrlPressed) {
+  console.log("nnDrag" + clicked);
+  if (clicked !== false) {
+    var ydiff = (y - clicked.l.y1) / (clicked.l.y2 - clicked.l.y1);
+    var new_w = ydiff * clicked.max - clicked.min;
+    net['layers'][clicked.ref[0]]["filters"][clicked.ref[1]]["w"][clicked.ref[2]] = new_w;
+    updateNetVis();
+    draw();
+  }
+}
 
-  for(var i=0;i<nodes.length;i++){
-    for(var j=0;j<nodes[i].length;j++){
-      c = nodes[i][j]
-      console.log(distance(c.x, c.y, x, y));
-      if (distance(c.x, c.y, x, y) < radi) {
-        var clicked_circle = nodes[i][j];
-        clicked=true;
-        console.log(clicked_circle);
-        break;
+function nnLeave(x,y,shiftPressed,ctrlPressed) {
+  console.log("nnLeave" + clicked);
+  clicked = false;
+}
+
+function nnMouseUp(x, y, shiftPressed, ctrlPressed){
+  // console.log("clicked on " + x + " " + y);
+  console.log("nnMouseUp" + clicked);
+  var clicked_a_node = false;
+  if (clicked === false) {
+    for(var i=0;i<nodes.length;i++){
+      for(var j=0;j<nodes[i].length;j++){
+        c = nodes[i][j]
+        console.log(distance(c.x, c.y, x, y));
+        if (distance(c.x, c.y, x, y) < radi) {
+          var clicked_circle = nodes[i][j];
+          selected_node = [2+2*i, j]
+          clicked_a_node=true;
+          // console.log(clicked_circle);
+          break;
+        }
       }
+      if (clicked_a_node) break;
     }
-    if (clicked) break;
   }
 
-  if (clicked) {
+  if (clicked !== false) {
     var top_layer = i;
 
     for(var i=0;i<nodes.length;i++){
@@ -486,9 +580,11 @@ function clickNetVis(x, y, shiftPressed, ctrlPressed){
       //   nodes[i][j].ins[k].s = nodes[i][j].s;
       // }
     }
-  clicked_circle.s = true; //I'm sure there's a more elegant way to do this but w/e
+    clicked_circle.s = true; //I'm sure there's a more elegant way to do this but w/e
   }
+  clicked = false;
   updateNetVis();
+  draw();
 }
 
 
@@ -501,7 +597,13 @@ $(function() {
 
     nncanvas =  document.getElementById("nncanvas");
     nnctx = nncanvas.getContext("2d");
-    nncanvas.addEventListener('click', eventClickGen(clickNetVis, nncanvas), false);
+    nncanvas.addEventListener('mousedown', eventClickGen(nnMouseDown, nncanvas), false);
+    nncanvas.addEventListener('mouseup', eventClickGen(nnMouseUp, nncanvas), false);
+    nncanvas.addEventListener('mousemove', eventClickGen(nnDrag, nncanvas), false);
+    nncanvas.addEventListener('mouseleave', eventClickGen(nnLeave, nncanvas), false);
+
+    nodecanvas =  document.getElementById("nodecanvas");
+    nodectx = nodecanvas.getContext("2d");
 
     circle_data();
     $("#layerdef").val(t);
